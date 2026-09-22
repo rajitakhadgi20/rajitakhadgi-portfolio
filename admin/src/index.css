@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg:        #0b0013;
+  --panel:     #15091f;
+  --panel-alt: #1e1230;
+  --border:    #2c1c3d;
+  --text:      #fbfbfb;
+  --text-dim:  #b8aec2;
+  --accent:    #a65fd7;
+  --accent-2:  #cea4eb;
+  --accent-bg: #8b31ca;
+  --danger:    #ef4444;
+  --success:   #22c55e;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #root { height: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Inter", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 { font-family: "Cormorant Garamond", serif; font-weight: 700; letter-spacing: 0.5px; }
+
+button { font-family: inherit; cursor: pointer; }
+input, textarea, select { font-family: inherit; }
+
+::selection { background: var(--accent-bg); color: #fff; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--accent-bg); color: #fff; border: none; border-radius: 8px;
+  padding: 10px 18px; font-size: 14px; font-weight: 600;
+  transition: opacity .15s, transform .15s;
+}
+.btn:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn.secondary { background: var(--panel-alt); border: 1px solid var(--border); color: var(--text); }
+.btn.danger { background: rgba(239,68,68,0.15); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
+.btn.small { padding: 6px 12px; font-size: 13px; }
+
+.input, textarea.input {
+  width: 100%; background: var(--panel-alt); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 14px; outline: none;
+  transition: border-color .15s;
+}
+.input:focus, textarea.input:focus { border-color: var(--accent); }
+
+.label { font-size: 13px; color: var(--text-dim); margin-bottom: 6px; display: block; }
+
+.card {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+}
+
+.badge {
+  display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px;
+  background: rgba(166,95,215,0.15); color: var(--accent-2); border: 1px solid rgba(166,95,215,0.3);
+}
+
+.scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+.scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}

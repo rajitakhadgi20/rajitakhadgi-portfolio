@@ -6,13 +6,13 @@ import { requireAuth } from "../middleware/auth.js";
 
 export const authRouter = Router();
 
-authRouter.post("/login", (req, res) => {
+authRouter.post("/login", async (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password) {
     return res.status(400).json({ error: "Email and password are required." });
   }
 
-  const admin = db.prepare("SELECT * FROM admins WHERE email = ?").get(email.toLowerCase().trim());
+  const admin = await db.prepare("SELECT * FROM admins WHERE email = ?").get(email.toLowerCase().trim());
   if (!admin || !bcrypt.compareSync(password, admin.password_hash)) {
     return res.status(401).json({ error: "Invalid email or password." });
   }

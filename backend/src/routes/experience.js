@@ -20,20 +20,20 @@ function toPublic(row) {
 
 // Public: list, ordered for display. Freelance entries are excluded from the
 // public site — per the design notes, "This doesn't show on the website".
-experienceRouter.get("/", (req, res) => {
-  const rows = db
+experienceRouter.get("/", async (req, res) => {
+  const rows = await db
     .prepare("SELECT * FROM experience WHERE type != 'Freelance' ORDER BY sort_order ASC, id ASC")
     .all();
   res.json(rows.map(toPublic));
 });
 
 // Admin: list ALL entries, including Freelance ones, so the dashboard can manage them
-experienceRouter.get("/all", requireAuth, (req, res) => {
-  const rows = db.prepare("SELECT * FROM experience ORDER BY sort_order ASC, id ASC").all();
+experienceRouter.get("/all", requireAuth, async (req, res) => {
+  const rows = await db.prepare("SELECT * FROM experience ORDER BY sort_order ASC, id ASC").all();
   res.json(rows.map(toPublic));
 });
 
-experienceRouter.post("/", requireAuth, (req, res) => {
+experienceRouter.post("/", requireAuth, async (req, res) => {
   const {
     role, company = "", type = "Full Time",
     startDate = "", endDate = "", description = "",
@@ -41,29 +41,32 @@ experienceRouter.post("/", requireAuth, (req, res) => {
   if (!role) return res.status(400).json({ error: "Role is required." });
   if (!TYPES.includes(type)) return res.status(400).json({ error: `Type must be one of: ${TYPES.join(", ")}` });
 
-  const maxOrder = db.prepare("SELECT COALESCE(MAX(sort_order), -1) AS m FROM experience").get().m;
-  const info = db
+  const maxOrderRow = await db.prepare("SELECT COALESCE(MAX(sort_order), -1) AS m FROM experience").get();
+  const maxOrder = maxOrderRow.m;
+  const info = await db
     .prepare(
       "INSERT INTO experience (role, company, type, start_date, end_date, description, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)"
     )
     .run(role, company, type, startDate, endDate, description, maxOrder + 1);
 
-  const row = db.prepare("SELECT * FROM experience WHERE id = ?").get(info.lastInsertRowid);
+  const row = await db.prepare("SELECT * FROM experience WHERE id = ?").get(info.lastInsertRowid);
   res.status(201).json(toPublic(row));
 });
 
-experienceRouter.put("/reorder/all", requireAuth, (req, res) => {
+experienceRouter.put("/reorder/all", requireAuth, async (req, res) => {
   const { order } = req.body || {};
   if (!Array.isArray(order)) return res.status(400).json({ error: "`order` must be an array of ids." });
   const update = db.prepare("UPDATE experience SET sort_order = ? WHERE id = ?");
-  const updateMany = db.transaction((ids) => { ids.forEach((id, i) => update.run(i, id)); });
-  updateMany(order);
-  const rows = db.prepare("SELECT * FROM experience ORDER BY sort_order ASC, id ASC").all();
+  const updateMany = db.transaction(async (ids) => {
+    for (const [i, id] of ids.entries()) await update.run(i, id);
+  });
+  await updateMany(order);
+  const rows = await db.prepare("SELECT * FROM experience ORDER BY sort_order ASC, id ASC").all();
   res.json(rows.map(toPublic));
 });
 
-experienceRouter.put("/:id", requireAuth, (req, res) => {
-  const existing = db.prepare("SELECT * FROM experience WHERE id = ?").get(req.params.id);
+experienceRouter.put("/:id", requireAuth, async (req, res) => {
+  const existing = await db.prepare("SELECT * FROM experience WHERE id = ?").get(req.params.id);
   if (!existing) return res.status(404).json({ error: "Entry not found." });
 
   const {
@@ -77,16 +80,16 @@ experienceRouter.put("/:id", requireAuth, (req, res) => {
 
   if (!TYPES.includes(type)) return res.status(400).json({ error: `Type must be one of: ${TYPES.join(", ")}` });
 
-  db.prepare(
+  await db.prepare(
     "UPDATE experience SET role = ?, company = ?, type = ?, start_date = ?, end_date = ?, description = ?, updated_at = datetime('now') WHERE id = ?"
   ).run(role, company, type, startDate, endDate, description, req.params.id);
 
-  const row = db.prepare("SELECT * FROM experience WHERE id = ?").get(req.params.id);
+  const row = await db.prepare("SELECT * FROM experience WHERE id = ?").get(req.params.id);
   res.json(toPublic(row));
 });
 
-experienceRouter.delete("/:id", requireAuth, (req, res) => {
-  const info = db.prepare("DELETE FROM experience WHERE id = ?").run(req.params.id);
+experienceRouter.delete("/:id", requireAuth, async (req, res) => {
+  const info = await db.prepare("DELETE FROM experience WHERE id = ?").run(req.params.id);
   if (info.changes === 0) return res.status(404).json({ error: "Entry not found." });
   res.status(204).end();
 });

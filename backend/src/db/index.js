@@ -1,14 +1,42 @@
-import Database from "better-sqlite3";
+import { createClient } from "@libsql/client";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const dbPath = path.join(__dirname, "..", "..", "data.sqlite3");
 
-export const db = new Database(dbPath);
-db.pragma("journal_mode = WAL");
+const url = process.env.TURSO_DATABASE_URL || `file:${path.join(__dirname, "..", "..", "data.sqlite3")}`;
+const authToken = process.env.TURSO_AUTH_TOKEN;
 
-db.exec(`
+const client = createClient(authToken ? { url, authToken } : { url });
+
+function prepare(sql) {
+  return {
+    async run(...args) {
+      const res = await client.execute({ sql, args });
+      return { lastInsertRowid: Number(res.lastInsertRowid), changes: res.rowsAffected };
+    },
+    async get(...args) {
+      const res = await client.execute({ sql, args });
+      return res.rows[0];
+    },
+    async all(...args) {
+      const res = await client.execute({ sql, args });
+      return res.rows;
+    },
+  };
+}
+
+function transaction(fn) {
+  return fn;
+}
+
+async function exec(sql) {
+  await client.executeMultiple(sql);
+}
+
+export const db = { prepare, transaction, exec };
+
+await exec(`
   CREATE TABLE IF NOT EXISTS admins (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
@@ -102,28 +130,27 @@ db.exec(`
   INSERT OR IGNORE INTO profile (id) VALUES (1);
 `);
 
-// Lightweight migrations: add columns to tables that may already exist from
-// before this update, without wiping existing data.
-function ensureColumn(table, column, definition) {
-  const cols = db.prepare(`PRAGMA table_info(${table})`).all().map((c) => c.name);
+async function ensureColumn(table, column, definition) {
+  const res = await client.execute(`PRAGMA table_info(${table})`);
+  const cols = res.rows.map((c) => c.name);
   if (!cols.includes(column)) {
-    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+    await client.execute(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
   }
 }
 
-ensureColumn("experience", "type", "TEXT NOT NULL DEFAULT 'Full Time'");
+await ensureColumn("experience", "type", "TEXT NOT NULL DEFAULT 'Full Time'");
 
-ensureColumn("profile", "cv_name", "TEXT NOT NULL DEFAULT ''");
-ensureColumn("profile", "media_images", "TEXT NOT NULL DEFAULT '[]'");
+await ensureColumn("profile", "cv_name", "TEXT NOT NULL DEFAULT ''");
+await ensureColumn("profile", "media_images", "TEXT NOT NULL DEFAULT '[]'");
 
-ensureColumn("projects", "date", "TEXT NOT NULL DEFAULT ''");
-ensureColumn("projects", "cover_image", "TEXT NOT NULL DEFAULT ''");
-ensureColumn("projects", "case_study_images", "TEXT NOT NULL DEFAULT '[]'");
-ensureColumn("projects", "case_study_desc", "TEXT NOT NULL DEFAULT ''");
+await ensureColumn("projects", "date", "TEXT NOT NULL DEFAULT ''");
+await ensureColumn("projects", "cover_image", "TEXT NOT NULL DEFAULT ''");
+await ensureColumn("projects", "case_study_images", "TEXT NOT NULL DEFAULT '[]'");
+await ensureColumn("projects", "case_study_desc", "TEXT NOT NULL DEFAULT ''");
 
-ensureColumn("gallery", "tags", "TEXT NOT NULL DEFAULT '[]'");
+await ensureColumn("gallery", "tags", "TEXT NOT NULL DEFAULT '[]'");
 
-ensureColumn("projects", "client", "TEXT NOT NULL DEFAULT ''");
-ensureColumn("projects", "role", "TEXT NOT NULL DEFAULT ''");
+await ensureColumn("projects", "client", "TEXT NOT NULL DEFAULT ''");
+await ensureColumn("projects", "role", "TEXT NOT NULL DEFAULT ''");
 
-ensureColumn("projects", "show_figma_link", "INTEGER NOT NULL DEFAULT 1");
+await ensureColumn("projects", "show_figma_link", "INTEGER NOT NULL DEFAULT 1");

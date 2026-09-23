@@ -25,13 +25,13 @@ function toPublic(row) {
   };
 }
 
-profileRouter.get("/", (req, res) => {
-  const row = db.prepare("SELECT * FROM profile WHERE id = 1").get();
+profileRouter.get("/", async (req, res) => {
+  const row = await db.prepare("SELECT * FROM profile WHERE id = 1").get();
   res.json(toPublic(row));
 });
 
-profileRouter.put("/", requireAuth, (req, res) => {
-  const existing = db.prepare("SELECT * FROM profile WHERE id = 1").get();
+profileRouter.put("/", requireAuth, async (req, res) => {
+  const existing = await db.prepare("SELECT * FROM profile WHERE id = 1").get();
 
   const {
     fullName = existing.full_name,
@@ -52,7 +52,7 @@ profileRouter.put("/", requireAuth, (req, res) => {
     mediaImages = JSON.parse(existing.media_images || "[]"),
   } = req.body || {};
 
-  db.prepare(
+  await db.prepare(
     `UPDATE profile SET
       full_name = ?, email = ?, avatar = ?, title = ?, location = ?,
       short_desc = ?, long_desc = ?, cv_url = ?, cv_name = ?, years_exp = ?,
@@ -66,6 +66,6 @@ profileRouter.put("/", requireAuth, (req, res) => {
     dribbbleUrl, JSON.stringify(mediaImages)
   );
 
-  const row = db.prepare("SELECT * FROM profile WHERE id = 1").get();
+  const row = await db.prepare("SELECT * FROM profile WHERE id = 1").get();
   res.json(toPublic(row));
 });

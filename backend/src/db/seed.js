@@ -2,9 +2,6 @@ import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { db } from "./index.js";
 
-// The 10 projects that used to be hard-coded in the frontend. Seeded once so the
-// site has content from the start; edit/add/remove them from the admin dashboard
-// after that.
 const STARTER_PROJECTS = [
   { title: "Greenhub Organic Website",   tags: ["WEBSITE"],             desc: "An e-commerce platform promoting fresh organic products with a clean and sustainable shopping experience.", img: "/image/Before Greenhub.png",      figma: "https://www.figma.com/design/6P680q8duatdA5w56fOmL8/GreenHub-Organic-Website?node-id=0-1&t=UceY262qTV3WHTHo-1" },
   { title: "Hotel Booking App",          tags: ["MOBILE APP"],          desc: "A user-friendly hotel reservation app with smart filters, secure payments, and booking management.",        img: "/image/Before Hotel booking.png", figma: "https://www.figma.com/design/aP6SP3iJAVSH3rA4JznvgU/Hotel-Booking?node-id=0-1&t=QSJxFgJNn4G727Nt-1" },
@@ -18,7 +15,7 @@ const STARTER_PROJECTS = [
   { title: "Himalayan Travel Website",   tags: ["WEBSITE", "REDESIGN"], desc: "A trekking website redesign enhancing user experience and booking flow with a clean, immersive interface.", img: "/image/Before Himalayan.png",   figma: "https://www.figma.com/design/3nMOF4NZ55Cwggla5SHhe3/Redesign-Task?node-id=0-1&t=BkbzZ9rsSNnQQcqN-1" },
 ];
 
-function seedAdmin() {
+async function seedAdmin() {
   const email = process.env.ADMIN_EMAIL;
   const password = process.env.ADMIN_PASSWORD;
   const name = process.env.ADMIN_NAME || "Admin";
@@ -26,37 +23,36 @@ function seedAdmin() {
     console.log("ADMIN_EMAIL / ADMIN_PASSWORD not set in .env — skipping admin seed.");
     return;
   }
-  const existing = db.prepare("SELECT id FROM admins WHERE email = ?").get(email);
+  const existing = await db.prepare("SELECT id FROM admins WHERE email = ?").get(email);
   const hash = bcrypt.hashSync(password, 10);
   if (existing) {
-    db.prepare("UPDATE admins SET password_hash = ?, name = ? WHERE email = ?").run(hash, name, email);
+    await db.prepare("UPDATE admins SET password_hash = ?, name = ? WHERE email = ?").run(hash, name, email);
     console.log(`Updated admin account: ${email}`);
   } else {
-    db.prepare("INSERT INTO admins (name, email, password_hash) VALUES (?, ?, ?)").run(name, email, hash);
+    await db.prepare("INSERT INTO admins (name, email, password_hash) VALUES (?, ?, ?)").run(name, email, hash);
     console.log(`Created admin account: ${email}`);
   }
 }
 
-function seedProjects() {
-  const count = db.prepare("SELECT COUNT(*) AS c FROM projects").get().c;
-  if (count > 0) {
-    console.log(`Projects table already has ${count} rows — skipping project seed.`);
+async function seedProjects() {
+  const countRow = await db.prepare("SELECT COUNT(*) AS c FROM projects").get();
+  if (countRow.c > 0) {
+    console.log(`Projects table already has ${countRow.c} rows — skipping project seed.`);
     return;
   }
   const insert = db.prepare(
     "INSERT INTO projects (title, tags, desc, img, figma, sort_order) VALUES (?, ?, ?, ?, ?, ?)"
   );
-  const insertMany = db.transaction((rows) => {
-    rows.forEach((p, i) => insert.run(p.title, JSON.stringify(p.tags), p.desc, p.img, p.figma, i));
-  });
-  insertMany(STARTER_PROJECTS);
+  for (const [i, p] of STARTER_PROJECTS.entries()) {
+    await insert.run(p.title, JSON.stringify(p.tags), p.desc, p.img, p.figma, i);
+  }
   console.log(`Seeded ${STARTER_PROJECTS.length} starter projects.`);
 }
 
-function seedExperience() {
-  const count = db.prepare("SELECT COUNT(*) AS c FROM experience").get().c;
-  if (count > 0) {
-    console.log(`Experience table already has ${count} rows — skipping.`);
+async function seedExperience() {
+  const countRow = await db.prepare("SELECT COUNT(*) AS c FROM experience").get();
+  if (countRow.c > 0) {
+    console.log(`Experience table already has ${countRow.c} rows — skipping.`);
     return;
   }
   const PLACEHOLDER_EXPERIENCE = [
@@ -66,32 +62,28 @@ function seedExperience() {
   const insert = db.prepare(
     "INSERT INTO experience (role, company, start_date, end_date, description, sort_order) VALUES (?, ?, ?, ?, ?, ?)"
   );
-  const insertMany = db.transaction((rows) => {
-    rows.forEach((e, i) => insert.run(e.role, e.company, e.startDate, e.endDate, e.description, i));
-  });
-  insertMany(PLACEHOLDER_EXPERIENCE);
+  for (const [i, e] of PLACEHOLDER_EXPERIENCE.entries()) {
+    await insert.run(e.role, e.company, e.startDate, e.endDate, e.description, i);
+  }
   console.log(`Seeded ${PLACEHOLDER_EXPERIENCE.length} placeholder experience entries — edit these from the admin dashboard.`);
 }
 
-function seedGallery() {
-  const count = db.prepare("SELECT COUNT(*) AS c FROM gallery").get().c;
-  if (count > 0) {
-    console.log(`Gallery table already has ${count} rows — skipping.`);
+async function seedGallery() {
+  const countRow = await db.prepare("SELECT COUNT(*) AS c FROM gallery").get();
+  if (countRow.c > 0) {
+    console.log(`Gallery table already has ${countRow.c} rows — skipping.`);
     return;
   }
   const insert = db.prepare("INSERT INTO gallery (title, img, sort_order) VALUES (?, ?, ?)");
-  const insertMany = db.transaction((rows) => {
-    rows.forEach((p, i) => insert.run(p.title, p.img, i));
-  });
-  // Starts as a copy of the project images — manage independently from the admin dashboard from here on.
-  insertMany(STARTER_PROJECTS.map((p) => ({ title: p.title, img: p.img })));
+  const rows = STARTER_PROJECTS.map((p) => ({ title: p.title, img: p.img }));
+  for (const [i, p] of rows.entries()) {
+    await insert.run(p.title, p.img, i);
+  }
   console.log(`Seeded ${STARTER_PROJECTS.length} gallery items from the starter projects' images.`);
 }
 
-seedAdmin();
-seedProjects();
-seedExperience();
-seedGallery();
+await seedAdmin();
+await seedProjects();
+await seedExperience();
+await seedGallery();
 console.log("Seed complete.");
-
-

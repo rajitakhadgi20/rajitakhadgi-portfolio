@@ -16,6 +16,11 @@ async function request(path, options = {}) {
   });
 
   if (res.status === 401) {
+    const isLoginRequest = path === "/api/auth/login";
+    if (isLoginRequest) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || "Invalid email or password.");
+    }
     localStorage.removeItem("admin_token");
     window.location.reload();
     throw new Error("Session expired.");

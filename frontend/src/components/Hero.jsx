@@ -19,7 +19,7 @@ export function Hero({ setPage, skipAnimation, onAnimDone, tk, toggleTheme }) {
   const isLight = tk.moonIcon;
 
   return (
-    <section id="home" style={{ position:"relative",height:724,overflow:"hidden",
+    <section id="home" className="hero-section" style={{ position:"relative",height:724,overflow:"hidden",
       background: isLight ? "#ffffff" : "#160126" }}>
       {!isLight && <img src={A.heroBg} alt="" style={{ position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",pointerEvents:"none" }}/>}
       {isLight && <img src={A.heroBgLight} alt="" style={{ position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",pointerEvents:"none" }}/>}

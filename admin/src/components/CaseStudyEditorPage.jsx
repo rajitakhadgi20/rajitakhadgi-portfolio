@@ -20,7 +20,6 @@ export function CaseStudyEditorPage({ project, onBack, onSaved }) {
     try {
       await api.updateProject(project.id, {
         coverImage,
-        img: coverImage,
         caseStudyImages,
         caseStudyDesc,
         showFigmaLink,
@@ -54,7 +53,10 @@ export function CaseStudyEditorPage({ project, onBack, onSaved }) {
             <p style={{ fontSize: 13, color: "var(--text-dim)", marginBottom: 18 }}>This is what shows on the project's public case-study page.</p>
 
             <div style={{ marginBottom: 20 }}>
-              <label className="label">Cover Page</label>
+              <label className="label">Case Study Cover Image</label>
+              <p style={{ fontSize: 12, color: "var(--text-dim)", marginTop: -4, marginBottom: 8 }}>
+                Shown at the top of this project's case-study page. This is separate from the thumbnail shown on the Projects list/grid — edit that one from the project's "Edit" button instead.
+              </p>
               <UploadBox value={coverImage} onChange={setCoverImage} height={220} />
             </div>
 

@@ -17,6 +17,7 @@ import { Login } from "./components/Login";
 import { Gallery } from "./components/Gallery";
 import { Experience } from "./components/Experience";
 import { ProjectCaseStudy } from "./components/ProjectCaseStudy";
+import { CursorButterfly } from "./components/CursorButterfly";
 
 export default function Portfolio() {
   const [open, setOpen]         = useState(false);
@@ -73,6 +74,7 @@ export default function Portfolio() {
 
   return (
     <div className="pf-root" style={{ background: tk.bg }}>
+      <CursorButterfly />
       {page === "login" ? (
         <Login tk={tk} onBack={handleBackToPortfolio} />
       ) : (

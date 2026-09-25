@@ -9,12 +9,9 @@ function fullDateLabel(value) {
 }
 
 const panelStyle = {
-  background: "linear-gradient(160deg, #f2eaf9 0%, #d9bff0 55%, #f6eefc 100%)",
   borderRadius: 20,
-  padding: "48px 32px",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
+  overflow: "hidden",
+  boxShadow: "0 20px 50px rgba(0,0,0,0.2)",
 };
 
 export function ProjectCaseStudy({ project, tk, onBack }) {
@@ -70,7 +67,7 @@ export function ProjectCaseStudy({ project, tk, onBack }) {
         {/* Cover */}
         {cover && (
           <div style={panelStyle}>
-            <img src={cover} alt={project.title} style={{ maxWidth: "100%", maxHeight: 480, borderRadius: 12, boxShadow: "0 20px 50px rgba(0,0,0,0.2)" }} />
+            <img src={cover} alt={project.title} style={{ display: "block", width: "100%", aspectRatio: "16 / 9", objectFit: "cover" }} />
           </div>
         )}
 
@@ -100,7 +97,7 @@ export function ProjectCaseStudy({ project, tk, onBack }) {
         {/* Every uploaded case-study image, each framed in its own panel */}
         {(project.caseStudyImages || []).map((img, i) => (
           <div key={i} style={panelStyle}>
-            <img src={img} alt={`${project.title} ${i + 1}`} style={{ maxWidth: "100%", borderRadius: 12, boxShadow: "0 20px 50px rgba(0,0,0,0.2)" }} />
+            <img src={img} alt={`${project.title} ${i + 1}`} style={{ display: "block", width: "100%", aspectRatio: "16 / 9", objectFit: "cover" }} />
           </div>
         ))}
       </div>

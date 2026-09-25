@@ -3,11 +3,11 @@ import { api } from "../api";
 import { EXPERIENCE_TYPES } from "../lib/constants";
 import { monthLabel } from "../lib/dates";
 
-const empty = { role: "", company: "", type: "Full Time", startDate: "", endDate: "" };
+const empty = { role: "", company: "", type: "Full Time", startDate: "", endDate: "", description: "" };
 
 function ExperienceForm({ entry, saving, onCancel, onSave, onDelete }) {
   const [form, setForm] = useState(
-    entry ? { role: entry.role, company: entry.company, type: entry.type || "Full Time", startDate: entry.startDate, endDate: entry.endDate } : empty
+    entry ? { role: entry.role, company: entry.company, type: entry.type || "Full Time", startDate: entry.startDate, endDate: entry.endDate, description: entry.description || "" } : empty
   );
   const [error, setError] = useState("");
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
@@ -15,7 +15,7 @@ function ExperienceForm({ entry, saving, onCancel, onSave, onDelete }) {
   const submit = (e) => {
     e.preventDefault();
     if (!form.role.trim()) { setError("Role is required."); return; }
-    onSave({ ...form, role: form.role.trim(), description: entry?.description || "" });
+    onSave({ ...form, role: form.role.trim() });
   };
 
   return (
@@ -54,6 +54,10 @@ function ExperienceForm({ entry, saving, onCancel, onSave, onDelete }) {
             <label className="label">End Date</label>
             <input className="input" type="month" value={form.endDate} onChange={set("endDate")} placeholder="Leave blank for Present" />
           </div>
+        </div>
+        <div>
+          <label className="label">Description</label>
+          <textarea className="input" rows={4} value={form.description} onChange={set("description")} placeholder="What did you do in this role? Key projects, impact, tools used." />
         </div>
 
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>

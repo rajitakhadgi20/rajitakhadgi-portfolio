@@ -54,10 +54,10 @@ export function Gallery({ tk, items }) {
 
   if (!items || items.length === 0) return null;
 
-  // Two rows moving in opposite directions when there's enough to show
-  const twoRows = items.length >= 6;
-  const rowA = twoRows ? items.filter((_, i) => i % 2 === 0) : items;
-  const rowB = twoRows ? items.filter((_, i) => i % 2 === 1) : [];
+  // Always a single auto-scrolling row
+  const twoRows = false;
+  const rowA = items;
+  const rowB = [];
 
   return (
     <section id="gallery" style={{ background: tk.bgSection, overflow: "hidden", padding: "100px 0 120px", transition: "background .4s ease" }}>

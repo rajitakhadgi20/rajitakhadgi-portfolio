@@ -95,10 +95,10 @@ export default function Portfolio() {
               <Ticker tk={tk} />
               <About tk={tk} />
               <Projects setPage={setPage} setSkipAnim={setSkipAnim} tk={tk} projects={projects} onOpen={openCaseStudy} />
-              <Gallery tk={tk} items={gallery} />
               <Skills tk={tk} />
               <Experience tk={tk} items={experience} />
               <Certificates tk={tk} />
+              <Gallery tk={tk} items={gallery} />
               <Contact tk={tk} />
               <Footer tk={tk} />
             </>

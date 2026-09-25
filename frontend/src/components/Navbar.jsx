@@ -13,10 +13,10 @@ export function Navbar({ open, setOpen, page, setPage, tk, toggleTheme }) {
     { label:"Home",        href:"#home",         id:"home" },
     { label:"About",       href:"#about",        id:"about" },
     { label:"Projects",    href:"#projects",     id:"projects" },
-    { label:"Gallery",     href:"#gallery",      id:"gallery" },
     { label:"Skills",      href:"#skills",       id:"skills" },
     { label:"Experience",  href:"#experience",   id:"experience" },
     { label:"Certificate", href:"#certificates", id:"certificates" },
+    { label:"Gallery",     href:"#gallery",      id:"gallery" },
     { label:"Contact",     href:"#contact",      id:"contact" },
   ];
 

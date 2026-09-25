@@ -38,7 +38,7 @@ export function Hero({ setPage, skipAnimation, onAnimDone, tk, toggleTheme }) {
             <img src={tk.moonIcon ? A.logoLight : A.logoDark} alt="RK" style={{ width:"100%",height:"100%",objectFit:"cover" }}/>
           </a>
           <div className="hero-links" style={{ gridColumn:2,display:"flex",alignItems:"center" }}>
-            {[["Home","home"],["About","about"],["Projects","projects"],["Gallery","gallery"],["Skills","skills"],["Experience","experience"],["Certificate","certificates"],["Contact","contact"]].map(([l,id],i) => (
+            {[["Home","home"],["About","about"],["Projects","projects"],["Skills","skills"],["Experience","experience"],["Certificate","certificates"],["Gallery","gallery"],["Contact","contact"]].map(([l,id],i) => (
               <a key={l} href={`#${id}`} style={{
                 position:"relative",display:"flex",alignItems:"center",justifyContent:"center",
                 padding:"8px 16px",height:36,color:tk.navLink,

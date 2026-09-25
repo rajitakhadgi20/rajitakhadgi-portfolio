@@ -28,7 +28,9 @@ function ExperienceItem({ item, index, last, tk }) {
           <div style={{ minWidth:0 }}>
             <h3 style={{ fontFamily:"Inter,sans-serif", fontWeight:600, fontSize:20, lineHeight:"28px", color:tk.cardTitle, transition:"color .4s" }}>{item.role}</h3>
             {item.company && (
-              <p style={{ fontFamily:"Inter,sans-serif", fontSize:16, lineHeight:"24px", color:tk.cardLink, marginTop:2, transition:"color .4s" }}>{item.company}</p>
+              <p style={{ fontFamily:"Inter,sans-serif", fontSize:16, lineHeight:"24px", color:tk.cardLink, marginTop:2, transition:"color .4s" }}>
+                {item.company}{item.type && ` · ${item.type}`}
+              </p>
             )}
           </div>
           <span style={{

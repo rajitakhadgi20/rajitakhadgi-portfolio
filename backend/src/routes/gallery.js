@@ -19,11 +19,10 @@ galleryRouter.post("/", requireAuth, async (req, res) => {
 
   const maxOrderRow = await db.prepare("SELECT COALESCE(MAX(sort_order), -1) AS m FROM gallery").get();
   const maxOrder = maxOrderRow.m;
-  const info = await db
-    .prepare("INSERT INTO gallery (title, img, tags, sort_order) VALUES (?, ?, ?, ?)")
-    .run(title, img, JSON.stringify(tags), maxOrder + 1);
+  const row = await db
+    .prepare("INSERT INTO gallery (title, img, tags, sort_order) VALUES (?, ?, ?, ?) RETURNING *")
+    .get(title, img, JSON.stringify(tags), maxOrder + 1);
 
-  const row = await db.prepare("SELECT * FROM gallery WHERE id = ?").get(info.lastInsertRowid);
   res.status(201).json(toPublic(row));
 });
 
@@ -49,10 +48,9 @@ galleryRouter.put("/:id", requireAuth, async (req, res) => {
     tags = JSON.parse(existing.tags || "[]"),
   } = req.body || {};
 
-  await db.prepare("UPDATE gallery SET title = ?, img = ?, tags = ?, updated_at = datetime('now') WHERE id = ?")
-    .run(title, img, JSON.stringify(tags), req.params.id);
+  const row = await db.prepare("UPDATE gallery SET title = ?, img = ?, tags = ?, updated_at = datetime('now') WHERE id = ? RETURNING *")
+    .get(title, img, JSON.stringify(tags), req.params.id);
 
-  const row = await db.prepare("SELECT * FROM gallery WHERE id = ?").get(req.params.id);
   res.json(toPublic(row));
 });
 

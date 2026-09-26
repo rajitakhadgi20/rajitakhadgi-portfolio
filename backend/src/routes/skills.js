@@ -19,11 +19,10 @@ skillsRouter.post("/", requireAuth, async (req, res) => {
 
   const maxOrderRow = await db.prepare("SELECT COALESCE(MAX(sort_order), -1) AS m FROM skills").get();
   const maxOrder = maxOrderRow.m;
-  const info = await db
-    .prepare("INSERT INTO skills (title, description, image, sort_order) VALUES (?, ?, ?, ?)")
-    .run(title, description, image, maxOrder + 1);
+  const row = await db
+    .prepare("INSERT INTO skills (title, description, image, sort_order) VALUES (?, ?, ?, ?) RETURNING *")
+    .get(title, description, image, maxOrder + 1);
 
-  const row = await db.prepare("SELECT * FROM skills WHERE id = ?").get(info.lastInsertRowid);
   res.status(201).json(toPublic(row));
 });
 
@@ -49,10 +48,9 @@ skillsRouter.put("/:id", requireAuth, async (req, res) => {
     image = existing.image,
   } = req.body || {};
 
-  await db.prepare("UPDATE skills SET title = ?, description = ?, image = ?, updated_at = datetime('now') WHERE id = ?")
-    .run(title, description, image, req.params.id);
+  const row = await db.prepare("UPDATE skills SET title = ?, description = ?, image = ?, updated_at = datetime('now') WHERE id = ? RETURNING *")
+    .get(title, description, image, req.params.id);
 
-  const row = await db.prepare("SELECT * FROM skills WHERE id = ?").get(req.params.id);
   res.json(toPublic(row));
 });
 

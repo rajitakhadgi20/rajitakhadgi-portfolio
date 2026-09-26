@@ -52,20 +52,20 @@ profileRouter.put("/", requireAuth, async (req, res) => {
     mediaImages = JSON.parse(existing.media_images || "[]"),
   } = req.body || {};
 
-  await db.prepare(
+  const row = await db.prepare(
     `UPDATE profile SET
       full_name = ?, email = ?, avatar = ?, title = ?, location = ?,
       short_desc = ?, long_desc = ?, cv_url = ?, cv_name = ?, years_exp = ?,
       projects_done = ?, happy_clients = ?, github_url = ?, linkedin_url = ?,
       dribbble_url = ?, media_images = ?, updated_at = datetime('now')
-     WHERE id = 1`
-  ).run(
+     WHERE id = 1
+     RETURNING *`
+  ).get(
     fullName, email, avatar, title, location,
     shortDesc, longDesc, cvUrl, cvName, yearsExp,
     projectsDone, happyClients, githubUrl, linkedinUrl,
     dribbbleUrl, JSON.stringify(mediaImages)
   );
 
-  const row = await db.prepare("SELECT * FROM profile WHERE id = 1").get();
   res.json(toPublic(row));
 });

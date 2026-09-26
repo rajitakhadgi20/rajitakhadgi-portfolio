@@ -43,13 +43,12 @@ experienceRouter.post("/", requireAuth, async (req, res) => {
 
   const maxOrderRow = await db.prepare("SELECT COALESCE(MAX(sort_order), -1) AS m FROM experience").get();
   const maxOrder = maxOrderRow.m;
-  const info = await db
+  const row = await db
     .prepare(
-      "INSERT INTO experience (role, company, type, start_date, end_date, description, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)"
+      "INSERT INTO experience (role, company, type, start_date, end_date, description, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *"
     )
-    .run(role, company, type, startDate, endDate, description, maxOrder + 1);
+    .get(role, company, type, startDate, endDate, description, maxOrder + 1);
 
-  const row = await db.prepare("SELECT * FROM experience WHERE id = ?").get(info.lastInsertRowid);
   res.status(201).json(toPublic(row));
 });
 
@@ -80,11 +79,10 @@ experienceRouter.put("/:id", requireAuth, async (req, res) => {
 
   if (!TYPES.includes(type)) return res.status(400).json({ error: `Type must be one of: ${TYPES.join(", ")}` });
 
-  await db.prepare(
-    "UPDATE experience SET role = ?, company = ?, type = ?, start_date = ?, end_date = ?, description = ?, updated_at = datetime('now') WHERE id = ?"
-  ).run(role, company, type, startDate, endDate, description, req.params.id);
+  const row = await db.prepare(
+    "UPDATE experience SET role = ?, company = ?, type = ?, start_date = ?, end_date = ?, description = ?, updated_at = datetime('now') WHERE id = ? RETURNING *"
+  ).get(role, company, type, startDate, endDate, description, req.params.id);
 
-  const row = await db.prepare("SELECT * FROM experience WHERE id = ?").get(req.params.id);
   res.json(toPublic(row));
 });
 

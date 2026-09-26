@@ -43,14 +43,14 @@ projectsRouter.post("/", requireAuth, async (req, res) => {
 
   const maxOrderRow = await db.prepare("SELECT COALESCE(MAX(sort_order), -1) AS m FROM projects").get();
   const maxOrder = maxOrderRow.m;
-  const info = await db
+  const row = await db
     .prepare(
       `INSERT INTO projects (title, tags, desc, img, figma, show_figma_link, date, client, role, cover_image, case_study_images, case_study_desc, sort_order)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       RETURNING *`
     )
-    .run(title, JSON.stringify(tags), desc, img, figma, showFigmaLink ? 1 : 0, date, client, role, coverImage, JSON.stringify(caseStudyImages), caseStudyDesc, maxOrder + 1);
+    .get(title, JSON.stringify(tags), desc, img, figma, showFigmaLink ? 1 : 0, date, client, role, coverImage, JSON.stringify(caseStudyImages), caseStudyDesc, maxOrder + 1);
 
-  const row = await db.prepare("SELECT * FROM projects WHERE id = ?").get(info.lastInsertRowid);
   res.status(201).json(toPublic(row));
 });
 
@@ -85,13 +85,13 @@ projectsRouter.put("/:id", requireAuth, async (req, res) => {
     caseStudyDesc = existing.case_study_desc,
   } = req.body || {};
 
-  await db.prepare(
+  const row = await db.prepare(
     `UPDATE projects SET title = ?, tags = ?, desc = ?, img = ?, figma = ?, show_figma_link = ?,
       date = ?, client = ?, role = ?, cover_image = ?, case_study_images = ?, case_study_desc = ?,
-      updated_at = datetime('now') WHERE id = ?`
-  ).run(title, JSON.stringify(tags), desc, img, figma, showFigmaLink ? 1 : 0, date, client, role, coverImage, JSON.stringify(caseStudyImages), caseStudyDesc, req.params.id);
+      updated_at = datetime('now') WHERE id = ?
+      RETURNING *`
+  ).get(title, JSON.stringify(tags), desc, img, figma, showFigmaLink ? 1 : 0, date, client, role, coverImage, JSON.stringify(caseStudyImages), caseStudyDesc, req.params.id);
 
-  const row = await db.prepare("SELECT * FROM projects WHERE id = ?").get(req.params.id);
   res.json(toPublic(row));
 });
 

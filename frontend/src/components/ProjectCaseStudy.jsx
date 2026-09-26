@@ -30,7 +30,7 @@ export function ProjectCaseStudy({ project, tk, onBack }) {
 
   return (
     <div style={{ background: tk.bg, minHeight: "100vh", paddingTop: 55, transition: "background .4s ease" }}>
-      <div className="pf-inner" style={{ paddingTop: 32, display: "flex", flexDirection: "column", gap: 32 }}>
+      <div className="pf-inner" style={{ paddingTop: 32, display: "flex", flexDirection: "column", gap: 24 }}>
         {/* Back button */}
         <button
           type="button"
@@ -73,7 +73,7 @@ export function ProjectCaseStudy({ project, tk, onBack }) {
 
         {/* Case study body text */}
         {project.caseStudyDesc && (
-          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 16, lineHeight: "28px", color: tk.cardDesc, maxWidth: 820 }}>
+          <p style={{ fontFamily: "Inter, sans-serif", fontSize: 16, lineHeight: "28px", color: tk.cardDesc, marginTop: -8 }}>
             {project.caseStudyDesc}
           </p>
         )}

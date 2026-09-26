@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { TagInput } from "./TagInput";
+import { UploadBox } from "./UploadBox";
 
-const emptyForm = { title: "", tags: [], date: "", client: "", role: "", desc: "", figma: "" };
+const emptyForm = { title: "", tags: [], date: "", client: "", role: "", desc: "", figma: "", img: "" };
 
 export function ProjectForm({ project, onCancel, onSave, onDelete, saving }) {
   const [form, setForm] = useState(
@@ -14,6 +15,7 @@ export function ProjectForm({ project, onCancel, onSave, onDelete, saving }) {
           role: project.role || "",
           desc: project.desc,
           figma: project.figma,
+          img: project.img || "",
         }
       : emptyForm
   );
@@ -39,6 +41,11 @@ export function ProjectForm({ project, onCancel, onSave, onDelete, saving }) {
         <div>
           <label className="label">Title</label>
           <input className="input" value={form.title} onChange={set("title")} placeholder="Enter Title" autoFocus />
+        </div>
+
+        <div>
+          <label className="label">Thumbnail Image <span style={{ color: "var(--text-dim)", fontWeight: 400 }}>(shown on the Projects grid)</span></label>
+          <UploadBox value={form.img} onChange={(img) => setForm((f) => ({ ...f, img }))} height={160} />
         </div>
 
         <div>
@@ -73,7 +80,7 @@ export function ProjectForm({ project, onCancel, onSave, onDelete, saving }) {
         </div>
 
         {!project && (
-          <p style={{ fontSize: 12, color: "var(--text-dim)" }}>You can add the cover image, case study pictures and description after saving, from the new "Case Study" button.</p>
+          <p style={{ fontSize: 12, color: "var(--text-dim)" }}>You can add the case-study cover image, extra pictures and long description after saving, from the new "Case Study" button.</p>
         )}
 
         <div style={{ display: "flex", gap: 10, marginTop: 8 }}>

@@ -7,7 +7,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
    dashboard edits). Falls back to the static ALL_PROJECTS list if the
    backend can't be reached, so the site still renders on its own. */
 export function useProjects() {
-  const [projects, setProjects] = useState(ALL_PROJECTS);
+  const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [usingFallback, setUsingFallback] = useState(false);
 
@@ -23,11 +23,15 @@ export function useProjects() {
         if (Array.isArray(data) && data.length) {
           setProjects(data);
         } else {
+          setProjects(ALL_PROJECTS);
           setUsingFallback(true);
         }
       })
       .catch(() => {
-        if (!cancelled) setUsingFallback(true);
+        if (!cancelled) {
+          setProjects(ALL_PROJECTS);
+          setUsingFallback(true);
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

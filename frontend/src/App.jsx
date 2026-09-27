@@ -74,7 +74,7 @@ export default function Portfolio() {
 
   return (
     <div className="pf-root" style={{ background: tk.bg }}>
-      <CursorButterfly />
+      {page !== "case-study" && <CursorButterfly />}
       {page === "login" ? (
         <Login tk={tk} onBack={handleBackToPortfolio} />
       ) : (

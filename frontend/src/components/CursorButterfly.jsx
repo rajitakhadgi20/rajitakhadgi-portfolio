@@ -18,12 +18,23 @@ export function CursorButterfly() {
     let facing = 1;
     let flap = 0;
     let raf;
+    let hidden = false;
 
     const onMove = (e) => {
       mouse.x = e.clientX;
       mouse.y = e.clientY;
     };
     window.addEventListener("mousemove", onMove, { passive: true });
+
+    // Hide whenever a lightbox/preview modal (or any dialog) is open, so it
+    // doesn't sit on top of an image someone is trying to actually look at.
+    const updateVisibility = () => {
+      hidden = !!document.querySelector('[role="dialog"], [aria-modal="true"]');
+      if (svgRef.current) svgRef.current.style.opacity = hidden ? "0" : "1";
+    };
+    updateVisibility();
+    const observer = new MutationObserver(updateVisibility);
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["role", "aria-modal"] });
 
     const tick = () => {
       // Hover just above the actual cursor position, trailing behind with a
@@ -56,6 +67,7 @@ export function CursorButterfly() {
     return () => {
       window.removeEventListener("mousemove", onMove);
       cancelAnimationFrame(raf);
+      observer.disconnect();
     };
   }, []);
 
@@ -75,6 +87,7 @@ export function CursorButterfly() {
         zIndex: 9999,
         filter: "drop-shadow(0 4px 8px rgba(107,33,168,0.4))",
         willChange: "transform",
+        transition: "opacity .2s ease",
       }}
       aria-hidden="true"
     >

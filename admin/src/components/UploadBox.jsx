@@ -20,6 +20,45 @@ function readAsDataURL(file) {
   });
 }
 
+// Resizes to a max dimension and re-encodes as JPEG before it ever becomes a
+// data URL. Uploaded photos (often several MB straight off a phone) would
+// otherwise get embedded directly into the database and re-downloaded in
+// full on every single page load — this keeps things fast without needing
+// any separate file-storage service.
+function compressImage(file, maxDim = 1600, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith("image/")) {
+      readAsDataURL(file).then(resolve, reject);
+      return;
+    }
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        if (width > height) { height = Math.round((height * maxDim) / width); width = maxDim; }
+        else { width = Math.round((width * maxDim) / height); height = maxDim; }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      // Flatten onto white first, since JPEG has no transparency.
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(objectUrl);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      // Fall back to the raw file rather than failing the upload outright.
+      readAsDataURL(file).then(resolve, reject);
+    };
+    img.src = objectUrl;
+  });
+}
+
 function UploadIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -41,7 +80,7 @@ export function UploadBox({ value, onChange, height = 180, accept = "image/*", l
     if (!file) return;
     setError("");
     try {
-      const dataUrl = await readAsDataURL(file);
+      const dataUrl = await compressImage(file);
       onChange(dataUrl);
     } catch {
       setError("Couldn't read that file.");
@@ -124,7 +163,7 @@ export function MultiUploadBox({ values = [], onChange, height = 140, accept = "
   const addFiles = async (fileList) => {
     const files = Array.from(fileList || []);
     if (!files.length) return;
-    const urls = await Promise.all(files.map(readAsDataURL));
+    const urls = await Promise.all(files.map((f) => compressImage(f)));
     onChange([...values, ...urls]);
   };
 

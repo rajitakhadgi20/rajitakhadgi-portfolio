@@ -13,7 +13,7 @@ export function useProjects() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`${API_URL}/api/projects`)
+    fetch(`${API_URL}/api/projects?summary=1`)
       .then((res) => {
         if (!res.ok) throw new Error("Request failed");
         return res.json();

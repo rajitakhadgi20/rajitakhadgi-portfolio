@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { CaseStudyPreview } from "./CaseStudyPreview";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+
 function fullDateLabel(value) {
   if (!value) return "—";
   const d = new Date(`${value}T00:00:00`);
@@ -14,13 +16,29 @@ const panelStyle = {
   boxShadow: "0 20px 50px rgba(0,0,0,0.2)",
 };
 
-export function ProjectCaseStudy({ project, tk, onBack }) {
+export function ProjectCaseStudy({ project: summary, tk, onBack }) {
   const [mounted, setMounted] = useState(false);
-  useEffect(() => { window.scrollTo({ top: 0 }); const t = setTimeout(() => setMounted(true), 60); return () => clearTimeout(t); }, [project]);
+  // The homepage only loads a slim summary of each project (no big images).
+  // The full project — cover + case-study images — is fetched here on demand.
+  const [full, setFull] = useState(null);
+  useEffect(() => { window.scrollTo({ top: 0 }); const t = setTimeout(() => setMounted(true), 60); return () => clearTimeout(t); }, [summary]);
 
-  if (!project) return null;
+  useEffect(() => {
+    setFull(null);
+    if (!summary?.id) return; // built-in sample projects already contain everything
+    let cancelled = false;
+    fetch(`${API_URL}/api/projects/${summary.id}`)
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error("failed"))))
+      .then((data) => { if (!cancelled) setFull(data); })
+      .catch(() => { if (!cancelled) setFull(summary); });
+    return () => { cancelled = true; };
+  }, [summary]);
 
-  const cover = project.coverImage || project.img;
+  if (!summary) return null;
+
+  const project = full || summary;
+  const loadingImages = !!summary.id && !full;
+  const cover = loadingImages ? null : (project.coverImage || project.img);
   const meta = [
     { label: "Client", value: project.client || "—" },
     { label: "Date", value: fullDateLabel(project.date) },
@@ -65,6 +83,11 @@ export function ProjectCaseStudy({ project, tk, onBack }) {
         </div>
 
         {/* Cover */}
+        {loadingImages && (
+          <div style={{ ...panelStyle, aspectRatio: "16 / 9", background: tk.cardBg, border: `1px solid ${tk.cardBorder}`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Inter, sans-serif", fontSize: 14, color: tk.cardDesc }}>
+            Loading images…
+          </div>
+        )}
         {cover && (
           <div style={panelStyle}>
             <img src={cover} alt={project.title} style={{ display: "block", width: "100%", aspectRatio: "16 / 9", objectFit: "cover" }} />

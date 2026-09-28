@@ -22,7 +22,31 @@ function toPublic(row) {
   };
 }
 
+// Slim version for the public homepage/project grid: skips the (potentially huge)
+// cover + case-study images, which are only needed on a single case-study page and
+// are fetched separately via GET /:id when someone opens one.
+function toSummary(row) {
+  return {
+    id: row.id,
+    title: row.title,
+    tags: JSON.parse(row.tags || "[]"),
+    desc: row.desc,
+    img: row.img,
+    figma: row.figma,
+    showFigmaLink: row.show_figma_link !== 0,
+    date: row.date,
+    client: row.client,
+    role: row.role,
+  };
+}
+
 projectsRouter.get("/", async (req, res) => {
+  if (req.query.summary === "1") {
+    const rows = await db
+      .prepare("SELECT id, title, tags, desc, img, figma, show_figma_link, date, client, role FROM projects ORDER BY sort_order ASC, id ASC")
+      .all();
+    return res.json(rows.map(toSummary));
+  }
   const rows = await db.prepare("SELECT * FROM projects ORDER BY sort_order ASC, id ASC").all();
   res.json(rows.map(toPublic));
 });

@@ -76,6 +76,8 @@ export const api = {
   updateSkill: (id, data) => request(`/api/skills/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   deleteSkill: (id) => request(`/api/skills/${id}`, { method: "DELETE" }),
   reorderSkills: (order) => request("/api/skills/reorder/all", { method: "PUT", body: JSON.stringify({ order }) }),
+
+  optimizeImages: () => request("/api/maintenance/optimize-images", { method: "POST" }),
 };
 
 export { getToken };

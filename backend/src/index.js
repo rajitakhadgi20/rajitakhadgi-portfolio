@@ -10,6 +10,7 @@ import { galleryRouter } from "./routes/gallery.js";
 import { profileRouter } from "./routes/profile.js";
 import { certificatesRouter } from "./routes/certificates.js";
 import { skillsRouter } from "./routes/skills.js";
+import { maintenanceRouter } from "./routes/maintenance.js";
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use("/api/gallery", galleryRouter);
 app.use("/api/profile", profileRouter);
 app.use("/api/certificates", certificatesRouter);
 app.use("/api/skills", skillsRouter);
+app.use("/api/maintenance", maintenanceRouter);
 
 app.use((req, res) => res.status(404).json({ error: "Not found." }));
 

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { api } from "../api";
 import { Icon } from "./icons";
 import { Sparkline, MiniBars, LineChart, Donut } from "./charts";
 import {
@@ -22,6 +23,51 @@ function StatCard({ icon, label, value, note, noteTone, children }) {
         </div>
         <div className="ad-stat-viz">{children}</div>
       </div>
+    </section>
+  );
+}
+
+function OptimizeImagesCard() {
+  const [state, setState] = useState("idle"); // idle | running | done | error
+  const [report, setReport] = useState(null);
+
+  const run = async () => {
+    setState("running");
+    try {
+      const r = await api.optimizeImages();
+      setReport(r);
+      setState("done");
+    } catch (e) {
+      setReport({ error: e.message });
+      setState("error");
+    }
+  };
+
+  const fmt = (n) => (n / 1024 / 1024 >= 1 ? `${(n / 1024 / 1024).toFixed(1)} MB` : `${Math.round(n / 1024)} KB`);
+
+  return (
+    <section className="ad-card" style={{ padding: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <div>
+          <p style={{ fontWeight: 600, fontSize: 15 }}>Site speed cleanup</p>
+          <p style={{ fontSize: 13, color: "var(--text-dim)", marginTop: 4, maxWidth: 560 }}>
+            Shrinks any large images already saved from before uploads were auto-compressed. Safe to run anytime — only images over ~150KB are touched, and only if it actually saves meaningful space.
+          </p>
+        </div>
+        <button className="btn" onClick={run} disabled={state === "running"}>
+          {state === "running" ? "Optimizing…" : "Run cleanup"}
+        </button>
+      </div>
+      {state === "done" && report && (
+        <p style={{ marginTop: 12, fontSize: 13, color: "var(--accent-2)" }}>
+          Checked {report.checked} image{report.checked === 1 ? "" : "s"}, optimized {report.optimized}.
+          {report.optimized > 0 && ` Saved ${fmt(report.bytesBefore - report.bytesAfter)} (${fmt(report.bytesBefore)} → ${fmt(report.bytesAfter)}).`}
+          {report.errors?.length > 0 && ` ${report.errors.length} skipped due to errors.`}
+        </p>
+      )}
+      {state === "error" && (
+        <p style={{ marginTop: 12, fontSize: 13, color: "var(--danger)" }}>Something went wrong: {report?.error}</p>
+      )}
     </section>
   );
 }
@@ -73,6 +119,9 @@ export function DashboardPage({ projects, messages, onOpenMessage, onGo }) {
 
   return (
     <div className="ad-grid">
+      <div style={{ gridColumn: "1 / -1" }}>
+        <OptimizeImagesCard />
+      </div>
       {/* Row 1: stats */}
       <div className="c-3">
         <StatCard icon="projects" label="Projects on your site" value={projects.length}

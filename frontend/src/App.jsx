@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { DARK, LIGHT } from "./data/tokens";
 import { CSS } from "./styles/globalCss";
 import { useProjects } from "./hooks/useProjects";
+import { useProfile } from "./hooks/useProfile";
 import { useApiList } from "./hooks/useApiList";
 
 import { Navbar } from "./components/Navbar";
@@ -30,6 +31,7 @@ export default function Portfolio() {
   const toggleTheme = () => setIsDark(d => !d);
 
   const { projects } = useProjects();
+  const { profile } = useProfile();
 
   const experience = useApiList("/api/experience", []);
   // If the backend is unreachable, the gallery falls back to the project images
@@ -95,7 +97,7 @@ export default function Portfolio() {
             <>
               <Hero setPage={setPage} skipAnimation={skipAnim} onAnimDone={() => setSkipAnim(true)} tk={tk} toggleTheme={toggleTheme} />
               <Ticker tk={tk} />
-              <About tk={tk} />
+              <About tk={tk} profile={profile} />
               <Projects setPage={setPage} setSkipAnim={setSkipAnim} tk={tk} projects={projects} onOpen={openCaseStudy} />
               <Skills tk={tk} />
               <Experience tk={tk} items={experience} />

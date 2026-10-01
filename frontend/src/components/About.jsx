@@ -2,35 +2,52 @@ import { useState, useRef, useEffect } from "react";
 import { A } from "../data/assets";
 import { useReveal } from "../hooks/useReveal";
 
-const STATS = [
-  { num:1, suffix:"+", label:"YEARS OF EXPERIENCE" },
-  { num:8, suffix:"+", label:"PROJECTS COMPLETED" },
-  { num:4, suffix:"+", label:"SATISFIED CLIENTS" },
-];
-
-export function About({ tk }) {
+export function About({ tk, profile }) {
   const photo = useReveal("rl");
   const content = useReveal("rr");
   const statsRef = useRef(null);
   const [counts, setCounts] = useState([0,0,0]);
 
+  const toNum = (v, fallback) => {
+    const n = parseInt(String(v ?? "").replace(/[^0-9]/g, ""), 10);
+    return Number.isFinite(n) ? n : fallback;
+  };
+  const STATS = [
+    { num: toNum(profile?.yearsExp, 1), suffix:"+", label:"YEARS OF EXPERIENCE" },
+    { num: toNum(profile?.projectsDone, 8), suffix:"+", label:"PROJECTS COMPLETED" },
+    { num: toNum(profile?.happyClients, 4), suffix:"+", label:"SATISFIED CLIENTS" },
+  ];
+  const paragraphs = (profile?.longDesc || "").split(/\n+/).filter(Boolean);
+
+  const [revealed, setRevealed] = useState(false);
   useEffect(() => {
     const el = statsRef.current; if (!el) return;
     const obs = new IntersectionObserver(([e]) => {
       if (!e.isIntersecting) return; obs.unobserve(el);
-      const targets = STATS.map(s => s.num);
-      const start = performance.now();
-      const tick = (now) => {
-        const p = Math.min((now - start) / 1800, 1);
-        const ease = 1 - Math.pow(1 - p, 3);
-        setCounts(targets.map(t => Math.floor(ease * t)));
-        if (p < 1) requestAnimationFrame(tick); else setCounts(targets);
-      };
-      requestAnimationFrame(tick);
+      setRevealed(true);
     }, { threshold:0.4 });
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
+
+  // Animates to the current target numbers once the section has been seen —
+  // and re-runs if the real profile numbers arrive after that (the fetch can
+  // finish after the user has already scrolled past this point).
+  const targetsKey = STATS.map(s => s.num).join(",");
+  useEffect(() => {
+    if (!revealed) return;
+    const targets = STATS.map(s => s.num);
+    const start = performance.now();
+    let raf;
+    const tick = (now) => {
+      const p = Math.min((now - start) / 1800, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      setCounts(targets.map(t => Math.floor(ease * t)));
+      if (p < 1) raf = requestAnimationFrame(tick); else setCounts(targets);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [revealed, targetsKey]);
 
   return (
     <section id="about" style={{ background:tk.bgAlt,overflow:"hidden",padding:"100px 0 120px",transition:"background .4s ease" }}>
@@ -51,8 +68,9 @@ export function About({ tk }) {
             <div style={{ width:"100%",display:"flex",flexDirection:"column",gap:24 }}>
               <h2 style={{ fontFamily:"'Cormorant Garamond',serif",fontWeight:700,fontSize:32,lineHeight:"42px",letterSpacing:"1.5px",color:tk.sectionTitle,alignSelf:"stretch",transition:"color .4s" }}>ABOUT ME</h2>
               <div style={{ display:"flex",flexDirection:"column",gap:18 }}>
-                <p style={{ fontFamily:"Inter,sans-serif",fontSize:17,fontWeight:400,lineHeight:"28px",color:tk.bodyText,alignSelf:"stretch",transition:"color .4s" }}>Hello, I am Rajita Khadgi, a UI/UX designer and Computer Science student based in Kathmandu, Nepal. With hands-on experience through internships and traineeships, I have developed a strong foundation in designing intuitive, user-centered digital experiences. I enjoy transforming ideas into structured, visually polished interfaces that balance usability and aesthetics.</p>
-                <p style={{ fontFamily:"Inter,sans-serif",fontSize:17,fontWeight:400,lineHeight:"28px",color:tk.bodyText,alignSelf:"stretch",transition:"color .4s" }}>Through projects such as service-based applications, booking platforms, and web interfaces, I have gained practical experience in wireframing, prototyping, and solving real-world design challenges using Figma. I am passionate about leveraging technology to create meaningful solutions, continuously improving my skills, and contributing to impactful digital products.</p>
+                {paragraphs.map((p, i) => (
+                  <p key={i} style={{ fontFamily:"Inter,sans-serif",fontSize:17,fontWeight:400,lineHeight:"28px",color:tk.bodyText,alignSelf:"stretch",transition:"color .4s" }}>{p}</p>
+                ))}
               </div>
             </div>
             <div style={{ width:"100%",height:0,outline:`0.1px solid ${tk.divider}` }}/>
@@ -70,4 +88,3 @@ export function About({ tk }) {
     </section>
   );
 }
-
